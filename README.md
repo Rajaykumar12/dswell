@@ -1,5 +1,9 @@
 # Dswell
 
+[![CI](https://github.com/agent-hellboy/dswell/actions/workflows/ci.yml/badge.svg)](https://github.com/agent-hellboy/dswell/actions/workflows/ci.yml)
+[![PyPI - Version](https://img.shields.io/pypi/v/dswell.svg)](https://pypi.org/project/dswell/)
+[![PyPI Downloads](https://static.pepy.tech/badge/dswell)](https://pepy.tech/projects/dswell)
+
 A daemon-based file deletion utility that allows you to schedule files or directories for deletion after a specified time period.
 
 Why did I create this?
