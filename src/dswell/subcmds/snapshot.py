@@ -1,29 +1,31 @@
 import shutil
 from datetime import datetime
 from pathlib import Path
+import zipfile
 
 import click
 
 
 @click.command()
-def snapshot() -> None:
+@click.option("--output", "-o", help="Output path for the snapshot file.")
+def snapshot(output: str | None) -> None:
     """Create a zip archive of the .dswell directory for debugging."""
     dswell_path = Path.home() / ".dswell"
     if not dswell_path.exists():
-        click.echo("No .dswell directory found. Nothing to snapshot.")
-        return
+        raise click.ClickException("No .dswell directory found.")
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    snapshot_name = f"dswell_snapshot_{timestamp}"
-    # Place snapshot on the Desktop for easy access if it exists, otherwise use home
-    desktop_path = Path.home() / "Desktop"
-    if desktop_path.exists() and desktop_path.is_dir():
-        archive_path = desktop_path / snapshot_name
+    if output:
+        archive_path = Path(output)
     else:
-        archive_path = Path.home() / snapshot_name
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        snapshot_name = f"dswell_snapshot_{timestamp}"
+        # Create snapshot in the current working directory
+        archive_path = Path.cwd() / snapshot_name
 
     try:
-        shutil.make_archive(str(archive_path), "zip", str(dswell_path))
+        with zipfile.ZipFile(f"{archive_path}.zip", "w", zipfile.ZIP_DEFLATED) as zf:
+            for file in dswell_path.rglob("*"):
+                zf.write(file, file.relative_to(dswell_path))
         click.echo(f"Successfully created snapshot: {archive_path}.zip")
     except Exception as e:
         click.echo(f"Failed to create snapshot: {e}", err=True)
