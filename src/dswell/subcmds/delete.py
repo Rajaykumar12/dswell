@@ -16,7 +16,7 @@ def delete(path: str) -> None:
     """Force delete a pending item immediately."""
     full_path = os.path.abspath(path)
     dswell_path = Path.home() / ".dswell"
-    file_hash = hashlib.md5(str(full_path).encode()).hexdigest()[:8]
+    file_hash = hashlib.md5(str(full_path).encode()).hexdigest()
     pidfile_path = dswell_path / f"daemon_{file_hash}.pid"
 
     # 1. Kill the daemon process
@@ -35,7 +35,10 @@ def delete(path: str) -> None:
 
     # 2. Perform the deletion
     try:
-        if os.path.isfile(full_path):
+        if os.path.islink(full_path):
+            os.remove(full_path)
+            click.echo(f"Successfully deleted symlink: {full_path}")
+        elif os.path.isfile(full_path):
             os.remove(full_path)
             click.echo(f"Successfully deleted file: {full_path}")
         elif os.path.isdir(full_path):
@@ -44,8 +47,8 @@ def delete(path: str) -> None:
         else:
             click.echo(f"Path not found, it may have been deleted already: {full_path}")
     except OSError as e:
-        logger.error(f"Error during force deletion of {full_path}: {e}")
-        click.echo(f"Error deleting {full_path}. See logs for details.", err=True)
+        logger.error(f"Failed to delete {full_path}: {e}")
+        raise click.ClickException(str(e)) from e
 
     # 3. Clean up pending entry
     remove_pending(full_path)

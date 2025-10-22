@@ -24,6 +24,8 @@ def create(path: str, time: str) -> None:
         start_daemon(full_path, deletion_seconds)
         click.echo(f"Scheduled '{full_path}' for deletion in {time}.")
     except ValueError as e:
-        click.echo(f"Error: {e}", err=True)
+        logger.error(f"Invalid time format: {e}")
+        # Ensure a non-zero exit code and proper Click error handling
+        raise click.ClickException(str(e)) from e
     except Exception as e:
         click.echo(f"An unexpected error occurred: {e}", err=True)

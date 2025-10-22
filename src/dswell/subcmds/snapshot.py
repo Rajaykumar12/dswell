@@ -15,9 +15,12 @@ def snapshot() -> None:
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     snapshot_name = f"dswell_snapshot_{timestamp}"
-    # Place snapshot on the Desktop for easy access
+    # Place snapshot on the Desktop for easy access if it exists, otherwise use home
     desktop_path = Path.home() / "Desktop"
-    archive_path = desktop_path / snapshot_name
+    if desktop_path.exists() and desktop_path.is_dir():
+        archive_path = desktop_path / snapshot_name
+    else:
+        archive_path = Path.home() / snapshot_name
 
     try:
         shutil.make_archive(str(archive_path), "zip", str(dswell_path))
