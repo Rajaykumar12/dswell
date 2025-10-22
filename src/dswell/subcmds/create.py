@@ -14,55 +14,16 @@ def touch_file(filepath):
 
 
 @click.command()
-@click.option(
-    "--dir",
-    is_flag=True,
-    default=False,
-    help="Create a directory instead of a file",
-)
-@click.argument("name")
-@click.option(
-    "--time",
-    help="Time till deletion (e.g., '1h3m2s', '1h', '30m', '45s')",
-    required=True,
-)
-def create(dir: bool, name: str, time: str) -> None:
-    """Create a file or directory and schedule it for deletion.
-
-    NAME is the name of the file or directory to create.
-    """
+@click.argument("path", type=click.Path(exists=True))
+@click.argument("time")
+def create(path: str, time: str) -> None:
+    """Schedule a file or directory for deletion."""
     try:
-        # Parse the time string into seconds
-        seconds = parse_time(time)
-        logger.debug(
-            f"Create command called with options: dir={dir}, name={name}, "
-            f"time={time} ({seconds} seconds)"
-        )
-
-        # Create the file or directory
-        if dir:
-            os.makedirs(name, exist_ok=True)
-            name = str(Path(name).absolute())
-            logger.debug(f"Created directory: {name}")
-            click.echo(
-                f"Created directory: {name} and scheduled for deletion "
-                f"after {format_time(seconds)}"
-            )
-        else:
-            touch_file(name)
-            name = str(Path(name).absolute())
-            logger.debug(f"Created file: {name}")
-            click.echo(
-                f"Created file: {name} and scheduled for deletion "
-                f"after {format_time(seconds)}"
-            )
-
-        # Schedule for deletion
-        start_daemon(name, seconds)
-
+        deletion_seconds = parse_time(time)
+        full_path = os.path.abspath(path)
+        start_daemon(full_path, deletion_seconds)
+        click.echo(f"Scheduled '{full_path}' for deletion in {time}.")
     except ValueError as e:
-        logger.error(f"Invalid time format: {str(e)}")
-        raise click.ClickException(str(e)) from e
+        click.echo(f"Error: {e}", err=True)
     except Exception as e:
-        logger.error(f"Error in create command: {str(e)}")
-        raise click.ClickException(str(e)) from e
+        click.echo(f"An unexpected error occurred: {e}", err=True)
